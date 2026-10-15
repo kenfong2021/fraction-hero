@@ -1,0 +1,1095 @@
+<!doctype html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#5B3DF5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="分數小英雄">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>:root{color-scheme:light}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>分數小英雄</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Noto+Sans+HK:wght@400;500;700&display=swap">
+<style>
+/* Layout: one phone-width column with three screens (level list, question + keypad, result).
+   Fractions are colour-coded everywhere: first fraction pink, second fraction blue, answer in ink. */
+:root {
+  --bg: #F2F4FF;
+  --surface: #FFFFFF;
+  --ink: #1B1F4B;
+  --muted: #565C8E;
+  --line: #D6DAF3;
+  --primary: #5B3DF5;
+  --on-primary: #FFFFFF;
+  --ca: #D02B6B;
+  --cb: #1166C4;
+  --pie-a: #FF7AA8;
+  --pie-b: #4DB6F7;
+  --pie-empty: #EEF0FF;
+  --pie-line: #1B1F4B;
+  --good: #0B7A50;
+  --good-bg: #DCF5E9;
+  --bad: #B52A2A;
+  --bad-bg: #FDE3E3;
+  --info: #1B1F4B;
+  --info-bg: #E6E9FF;
+  --hint-bg: #FFF2CC;
+  --hint-ink: #523C00;
+  --star: #FFB400;
+  --star-off: #CDD1EE;
+  --font-display: 'Fredoka', 'Noto Sans HK', system-ui, sans-serif;
+  --font-body: 'Noto Sans HK', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12143A;
+    --surface: #1D2158;
+    --ink: #F0F1FF;
+    --muted: #AEB3E6;
+    --line: #353B88;
+    --primary: #A798FF;
+    --on-primary: #12143A;
+    --ca: #FF8FB6;
+    --cb: #7CC4FF;
+    --pie-a: #FF7AA8;
+    --pie-b: #4DB6F7;
+    --pie-empty: #2A2F73;
+    --pie-line: #F0F1FF;
+    --good: #5BE0A8;
+    --good-bg: #123F2E;
+    --bad: #FF9A9A;
+    --bad-bg: #4A1D26;
+    --info: #F0F1FF;
+    --info-bg: #2A2F73;
+    --hint-bg: #3D3512;
+    --hint-ink: #FFE9A3;
+    --star: #FFC21A;
+    --star-off: #3A4090;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12143A;
+  --surface: #1D2158;
+  --ink: #F0F1FF;
+  --muted: #AEB3E6;
+  --line: #353B88;
+  --primary: #A798FF;
+  --on-primary: #12143A;
+  --ca: #FF8FB6;
+  --cb: #7CC4FF;
+  --pie-a: #FF7AA8;
+  --pie-b: #4DB6F7;
+  --pie-empty: #2A2F73;
+  --pie-line: #F0F1FF;
+  --good: #5BE0A8;
+  --good-bg: #123F2E;
+  --bad: #FF9A9A;
+  --bad-bg: #4A1D26;
+  --info: #F0F1FF;
+  --info-bg: #2A2F73;
+  --hint-bg: #3D3512;
+  --hint-ink: #FFE9A3;
+  --star: #FFC21A;
+  --star-off: #3A4090;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+button { font-family: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }
+button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+
+.app {
+  max-width: 520px;
+  margin-inline: auto;
+  padding-block: 18px 32px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+p { margin: 0; }
+
+/* ---------- fractions ---------- */
+.frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs, 40px);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.frac .n, .frac .d { min-width: 1.1em; padding-inline: .22em; text-align: center; }
+.frac .n { border-bottom: .09em solid currentColor; padding-bottom: .04em; }
+.frac .d { padding-top: .04em; }
+.fa { color: var(--ca); }
+.fb { color: var(--cb); }
+.op, .eq {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 34px;
+  color: var(--muted);
+}
+.pie { display: block; width: 60px; height: 60px; }
+.mixed { display: inline-flex; align-items: center; gap: 6px; }
+.mixed .w { font-family: var(--font-display); font-weight: 600; font-size: 40px; line-height: 1; }
+.mixed.fa .w { color: var(--ca); }
+.mixed.fb .w { color: var(--cb); }
+.mixed .slot.whole { min-width: 56px; }
+
+/* ---------- home ---------- */
+.hero { display: flex; flex-direction: column; gap: 6px; padding-block: 8px 18px; }
+.hero-pies { display: flex; gap: 8px; margin-bottom: 6px; }
+.hero-pies .pie { width: 44px; height: 44px; }
+.hero h1 { font-family: var(--font-display); font-size: 44px; font-weight: 700; line-height: 1.15; }
+.hero .sub { color: var(--muted); font-size: 17px; }
+.total {
+  align-self: flex-start;
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.total .glyph { color: var(--star); font-size: 20px; }
+
+.levels { display: flex; flex-direction: column; gap: 12px; }
+.sec { margin: 26px 0 4px; font-family: var(--font-display); font-size: 24px; font-weight: 700; }
+.sec-sub { margin: 0 0 12px; font-size: 14px; color: var(--muted); }
+.lv-num.sp { background: var(--ca); color: #FFFFFF; }
+.level {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  text-align: left;
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: 22px;
+  cursor: pointer;
+  transition: transform .12s ease, border-color .12s ease;
+}
+.level:not(:disabled):hover { border-color: var(--primary); }
+.level:not(:disabled):active { transform: scale(.985); }
+.level:disabled { cursor: not-allowed; background: transparent; border-style: dashed; }
+.level:disabled .lv-main, .level:disabled .lv-num { opacity: .6; }
+.lv-num {
+  width: 46px; height: 46px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--primary); color: var(--on-primary);
+  font-family: var(--font-display); font-weight: 700; font-size: 22px;
+}
+.lv-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lv-main h3 { font-size: 19px; font-weight: 700; }
+.lv-main p { font-size: 14px; color: var(--muted); }
+.lv-ex { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.lv-ex .frac { --fs: 22px; }
+.lv-ex .op, .lv-ex .eq { font-size: 20px; }
+.lv-ex .mixed .w { font-size: 22px; }
+.lv-ex .mixed { gap: 3px; }
+.lv-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; font-size: 14px; color: var(--muted); font-weight: 500; }
+.stars { display: inline-flex; gap: 2px; font-size: 22px; line-height: 1; }
+.stars .on { color: var(--star); }
+.stars .off { color: var(--star-off); }
+.rule { margin-top: 18px; font-size: 14px; color: var(--muted); }
+.ghost {
+  min-height: 44px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+.ghost:hover { border-color: var(--primary); }
+#reset { margin-top: 14px; }
+
+/* ---------- quiz ---------- */
+.topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.icon-btn {
+  width: 44px; height: 44px; flex: none;
+  background: var(--surface); border: 2px solid var(--line); border-radius: 12px;
+  font-size: 18px; font-weight: 700; cursor: pointer;
+}
+.progress { flex: 1; height: 12px; background: var(--line); border-radius: 999px; overflow: hidden; }
+.progress span { display: block; height: 100%; width: 0; background: var(--primary); border-radius: 999px; transition: width .3s ease; }
+.count { min-width: 3.4em; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.qcard {
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: 24px;
+  padding: 16px 16px 18px;
+}
+.level-tag { font-size: 13px; font-weight: 700; letter-spacing: .06em; color: var(--muted); }
+.instr { margin-top: 2px; font-size: 17px; font-weight: 500; }
+.expr {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: 8px 12px; margin-top: 12px; min-height: 130px;
+}
+.expr .break { flex-basis: 100%; height: 0; }
+.term { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.word { font-size: 18px; font-weight: 700; color: var(--muted); }
+.slot {
+  min-width: 64px; height: 50px; padding: 0 8px;
+  background: var(--bg);
+  border: 3px dashed var(--line);
+  border-radius: 12px;
+  font-family: var(--font-display); font-weight: 600; font-size: 30px; line-height: 1;
+  color: var(--ink);
+  cursor: pointer;
+}
+.slot.active { border: 3px solid var(--primary); background: var(--surface); }
+.slot.filled { border-style: solid; }
+.ans { color: var(--ink); }
+.ans .n { border-bottom-color: var(--ink); padding-block: 4px; }
+.ans .d { padding-top: 4px; }
+.ans .fixed { font-size: 38px; }
+
+.status { display: flex; gap: 10px; align-items: stretch; margin: 12px 0 10px; height: 68px; }
+.status .ghost { flex: none; align-self: center; white-space: nowrap; }
+.feedback {
+  flex: 1; min-width: 0; display: flex; align-items: center;
+  padding: 6px 14px;
+  border-radius: 14px; font-weight: 700; line-height: 1.35; font-size: 15px;
+  background: transparent; color: var(--muted);
+}
+.feedback.good { background: var(--good-bg); color: var(--good); }
+.feedback.bad { background: var(--bad-bg); color: var(--bad); }
+.feedback.info { background: var(--info-bg); color: var(--info); }
+.hint {
+  margin-top: 10px; padding: 12px 14px 12px 16px;
+  background: var(--hint-bg); color: var(--hint-ink);
+  border-radius: 14px; font-size: 15px;
+}
+.hint ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.key {
+  height: 52px;
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 3px 0 var(--line);
+  font-family: var(--font-display); font-weight: 600; font-size: 26px;
+  cursor: pointer;
+  user-select: none;
+}
+.key:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
+.key.enter { background: var(--primary); border-color: var(--primary); color: var(--on-primary); box-shadow: 0 3px 0 rgba(0,0,0,.25); font-family: var(--font-body); font-size: 18px; font-weight: 700; }
+.key[aria-disabled="true"]:not(.enter) { opacity: .4; }
+
+/* ---------- result ---------- */
+.result-card {
+  background: var(--surface); border: 2px solid var(--line); border-radius: 24px;
+  padding: 28px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.big-stars { display: flex; gap: 8px; font-size: 64px; line-height: 1; }
+.big-stars .on { color: var(--star); }
+.big-stars .off { color: var(--star-off); }
+.result-card h2 { font-family: var(--font-display); font-size: 30px; font-weight: 700; }
+.result-card p { color: var(--muted); }
+.res-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.primary {
+  min-height: 54px; padding: 10px 18px;
+  background: var(--primary); color: var(--on-primary);
+  border: 0; border-radius: 14px;
+  font-weight: 700; font-size: 18px; cursor: pointer;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .shake { animation: shake .35s ease; }
+  .pop { animation: pop .45s cubic-bezier(.2,1.6,.4,1) both; }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+  @keyframes pop { 0% { transform: scale(.2); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+}
+@media (max-width: 380px) {
+  .hero h1 { font-size: 38px; }
+  .lv-side .label { display: none; }
+}
+</style>
+
+<div class="app">
+  <section id="screen-home">
+    <header class="hero">
+      <div class="hero-pies" id="hero-pies" aria-hidden="true"></div>
+      <h1>分數小英雄</h1>
+      <p class="sub">一關一關練，通分、加減都唔怕。</p>
+      <p class="total"><span class="glyph" aria-hidden="true">★</span><span><b id="total-stars">0</b> / 21 粒星</span></p>
+    </header>
+    <div id="levels" class="levels"></div>
+    <h2 class="sec">專項練習</h2>
+    <p class="sec-sub">約分、帶分數，唔使解鎖，想練邊樣就練邊樣。</p>
+    <div id="specials" class="levels"></div>
+    <p class="rule">每關 10 題。答啱 6 題過關得 1 星，8 題得 2 星，全中得 3 星。過咗主線關卡就會解鎖下一關。</p>
+    <button id="reset" class="ghost" type="button">清除進度</button>
+  </section>
+
+  <section id="screen-quiz" hidden>
+    <div class="topbar">
+      <button id="quit" class="icon-btn" type="button" aria-label="離開練習">✕</button>
+      <div class="progress" id="progress" role="progressbar" aria-label="練習進度" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0"><span id="bar-fill"></span></div>
+      <span id="q-count" class="count">1 / 10</span>
+    </div>
+    <div class="qcard">
+      <p id="level-name" class="level-tag"></p>
+      <p id="instr" class="instr"></p>
+      <div id="expr" class="expr"></div>
+    </div>
+    <div class="status">
+      <div id="feedback" class="feedback" aria-live="polite"></div>
+      <button id="hint-btn" class="ghost" type="button">提示</button>
+    </div>
+    <div id="hint" class="hint" hidden></div>
+    <div class="keypad" id="keypad">
+      <button class="key" type="button" data-k="1">1</button>
+      <button class="key" type="button" data-k="2">2</button>
+      <button class="key" type="button" data-k="3">3</button>
+      <button class="key" type="button" data-k="4">4</button>
+      <button class="key" type="button" data-k="5">5</button>
+      <button class="key" type="button" data-k="6">6</button>
+      <button class="key" type="button" data-k="7">7</button>
+      <button class="key" type="button" data-k="8">8</button>
+      <button class="key" type="button" data-k="9">9</button>
+      <button class="key" type="button" data-k="back" aria-label="刪除">⌫</button>
+      <button class="key" type="button" data-k="0">0</button>
+      <button class="key enter" type="button" data-k="enter" id="enter">確定</button>
+    </div>
+  </section>
+
+  <section id="screen-result" hidden>
+    <div class="result-card">
+      <p class="level-tag" id="res-level"></p>
+      <div class="big-stars" id="res-stars" role="img"></div>
+      <h2 id="res-title"></h2>
+      <p id="res-detail"></p>
+    </div>
+    <div class="res-actions">
+      <button id="res-next" class="primary" type="button" hidden>下一關</button>
+      <button id="res-again" class="primary" type="button">再玩一次</button>
+      <button id="res-home" class="ghost" type="button">返回主頁</button>
+    </div>
+  </section>
+</div>
+
+<script>
+// ==LOGIC-START==
+const gcd = (a, b) => (b ? gcd(b, a % b) : Math.abs(a));
+const lcm = (a, b) => (a / gcd(a, b)) * b;
+const rnd = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const reduceFrac = (n, d) => { const g = gcd(n, d); return { n: n / g, d: d / g }; };
+
+function buildAddSub(a, b, op, allowImproper) {
+  const L = lcm(a.d, b.d);
+  const an = a.n * (L / a.d);
+  const bn = b.n * (L / b.d);
+  let rn;
+  if (op === '+') {
+    rn = an + bn;
+    if (!allowImproper && rn >= L) return null;
+    if (allowImproper && rn >= 2 * L) return null;
+  } else {
+    rn = an - bn;
+    if (rn <= 0) return null;
+  }
+  const ans = reduceFrac(rn, L);
+  if (ans.d === 1) return null;
+  return { type: 'frac', a, b, op, L, an, bn, rn, ans, allowImproper };
+}
+
+function genFrac(level) {
+  for (let t = 0; t < 1000; t++) {
+    const op = Math.random() < 0.5 ? '+' : '-';
+    let a, b, improper = false;
+    if (level === 1) {
+      const d = rnd(4, 12);
+      a = { n: rnd(1, d - 1), d };
+      b = { n: rnd(1, d - 1), d };
+    } else if (level === 3) {
+      const d1 = pick([2, 3, 4, 5, 6]);
+      const d2 = d1 * rnd(2, 4);
+      if (d2 > 12) continue;
+      a = { n: rnd(1, d1 - 1), d: d1 };
+      b = { n: rnd(1, d2 - 1), d: d2 };
+      if (Math.random() < 0.5) { const t2 = a; a = b; b = t2; }
+    } else {
+      const d1 = rnd(2, 12);
+      const d2 = rnd(2, 12);
+      if (d1 === d2 || d1 % d2 === 0 || d2 % d1 === 0 || lcm(d1, d2) > 30) continue;
+      a = { n: rnd(1, d1 - 1), d: d1 };
+      b = { n: rnd(1, d2 - 1), d: d2 };
+      improper = true;
+    }
+    let q = buildAddSub(a, b, op, improper);
+    if (!q && op === '-') q = buildAddSub(b, a, '-', improper);
+    if (q) return q;
+  }
+  throw new Error('could not generate question');
+}
+
+function genLcd() {
+  for (;;) {
+    const d1 = rnd(2, 12);
+    const d2 = rnd(2, 12);
+    if (d1 === d2) continue;
+    const L = lcm(d1, d2);
+    if (L > 36) continue;
+    const multiple = d1 % d2 === 0 || d2 % d1 === 0;
+    if (multiple && Math.random() < 0.7) continue;
+    return { type: 'lcd', a: { n: rnd(1, d1 - 1), d: d1 }, b: { n: rnd(1, d2 - 1), d: d2 }, ans: L };
+  }
+}
+
+function genEquiv() {
+  for (;;) {
+    const d = rnd(2, 9);
+    const k = rnd(2, 6);
+    const D = d * k;
+    if (D > 48) continue;
+    const n = rnd(1, d - 1);
+    return { type: 'equiv', a: { n, d }, D, k, ans: n * k };
+  }
+}
+
+function coprimeNum(d) {
+  for (;;) {
+    const n = rnd(1, d - 1);
+    if (gcd(n, d) === 1) return n;
+  }
+}
+function coprimePair(maxD) {
+  const d = rnd(2, maxD);
+  return { n: coprimeNum(d), d };
+}
+
+// special practice 1: simplifying (find the greatest common factor, then divide)
+function genSimplify() {
+  for (;;) {
+    const f = coprimePair(12);
+    const k = rnd(2, 8);
+    if (f.d * k > 60) continue;
+    return { type: 'simplify', a: { n: f.n * k, d: f.d * k }, ans: f, k };
+  }
+}
+function genGcf() {
+  const s = genSimplify();
+  return { type: 'gcf', a: s.a, ans: s.k };
+}
+
+// special practice 2: improper fraction <-> mixed number
+function genToMixed() {
+  const f = coprimePair(9);
+  const w = rnd(1, 5);
+  return { type: 'toMixed', a: { n: w * f.d + f.n, d: f.d }, ans: { w, n: f.n, d: f.d } };
+}
+function genToImproper() {
+  const f = coprimePair(9);
+  const w = rnd(1, 5);
+  return { type: 'toImproper', m: { w, n: f.n, d: f.d }, ans: { n: w * f.d + f.n, d: f.d } };
+}
+
+// special practice 3: adding and subtracting mixed numbers (answer is a mixed number)
+function genMixedAddSub() {
+  for (let t = 0; t < 3000; t++) {
+    const d1 = rnd(2, 8);
+    const d2 = Math.random() < 0.4 ? d1 : rnd(2, 8);
+    if (lcm(d1, d2) > 24) continue;
+    const m1 = { w: rnd(1, 4), n: coprimeNum(d1), d: d1 };
+    const m2 = { w: rnd(1, 3), n: coprimeNum(d2), d: d2 };
+    const op = Math.random() < 0.5 ? '+' : '-';
+    const L = lcm(d1, d2);
+    const an = (m1.w * d1 + m1.n) * (L / d1);
+    const bn = (m2.w * d2 + m2.n) * (L / d2);
+    const rn = op === '+' ? an + bn : an - bn;
+    if (rn <= L) continue;
+    const R = reduceFrac(rn, L);
+    if (R.d === 1) continue;
+    const whole = Math.floor(R.n / R.d);
+    if (whole > 9) continue;
+    return { type: 'mixedAddSub', m1, m2, op, L, an, bn, rn, imp: R, ans: { w: whole, n: R.n % R.d, d: R.d } };
+  }
+  throw new Error('could not generate mixed question');
+}
+
+function factorsOf(n) {
+  const f = [];
+  for (let i = 1; i <= n; i++) if (n % i === 0) f.push(i);
+  return f.join('、');
+}
+
+function questionKey(q) {
+  return JSON.stringify(q);
+}
+
+function generateSet(level, count = 10) {
+  const seen = new Set();
+  const out = [];
+  let guard = 0;
+  while (out.length < count && guard++ < 2000) {
+    let q;
+    if (level === 2) q = out.length % 2 === 0 ? genLcd() : genEquiv();
+    else if (level === 5) q = out.length % 2 === 0 ? genGcf() : genSimplify();
+    else if (level === 6) q = out.length % 2 === 0 ? genToMixed() : genToImproper();
+    else if (level === 7) q = genMixedAddSub();
+    else q = genFrac(level);
+    const key = questionKey(q);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(q);
+  }
+  return out;
+}
+
+function checkAnswer(q, vals) {
+  if (q.type === 'toMixed' || q.type === 'mixedAddSub') {
+    const w = vals[0];
+    const n = vals[1];
+    const d = vals[2];
+    if (!(d > 0) || !(n >= 0) || !(w >= 0)) return 'invalid';
+    const imp = q.type === 'toMixed' ? q.a : q.imp;
+    if ((w * d + n) * imp.d !== d * imp.n) return 'wrong';
+    return w === q.ans.w && n === q.ans.n && d === q.ans.d ? 'correct' : 'nonstandard';
+  }
+  if (q.type === 'frac' || q.type === 'simplify' || q.type === 'toImproper') {
+    const n = vals[0];
+    const d = vals[1];
+    if (!(d > 0) || !(n >= 0)) return 'invalid';
+    if (n * q.ans.d === d * q.ans.n) return gcd(n, d) === 1 ? 'correct' : 'unsimplified';
+    return 'wrong';
+  }
+  const v = vals[0];
+  if (!(v > 0)) return 'invalid';
+  if (q.type === 'lcd') {
+    if (v === q.ans) return 'correct';
+    if (v % q.a.d === 0 && v % q.b.d === 0) return 'notleast';
+    return 'wrong';
+  }
+  if (q.type === 'gcf') {
+    if (v === q.ans) return 'correct';
+    if (q.a.n % v === 0 && q.a.d % v === 0) return 'notgreatest';
+    return 'wrong';
+  }
+  return v === q.ans ? 'correct' : 'wrong';
+}
+
+function multiplesUpTo(d, L) {
+  const out = [];
+  for (let m = d; m <= L; m += d) out.push(m);
+  return out.join('、');
+}
+
+function stepsFor(q) {
+  if (q.type === 'frac') {
+    const { a, b, op, L, an, bn, rn, ans } = q;
+    const sym = op === '+' ? '+' : '−';
+    const word = op === '+' ? '加' : '減';
+    const s = [];
+    if (a.d === b.d) {
+      s.push(`分母一樣（都係 ${a.d}），唔使通分。`);
+    } else {
+      s.push(`搵公分母：${a.d} 同 ${b.d} 嘅最小公倍數係 ${L}。`);
+      const conv = (f, nn) => (f.d === L ? `${f.n}/${f.d} 唔使變` : `${f.n}/${f.d} = ${nn}/${L}`);
+      s.push(`通分：${conv(a, an)}，${conv(b, bn)}。`);
+    }
+    s.push(`分母保持 ${L}，分子${word}分子：${an} ${sym} ${bn} = ${rn}，即 ${rn}/${L}。`);
+    const g = gcd(rn, L);
+    s.push(g > 1 ? `約分：${rn}/${L} 上下同除以 ${g}，得 ${ans.n}/${ans.d}。` : `${rn}/${L} 已經係最簡分數。`);
+    if (rn > L) s.push(`${ans.n}/${ans.d} 分子大過分母，係假分數，可以咁寫。`);
+    return s;
+  }
+  if (q.type === 'simplify' || q.type === 'gcf') {
+    const N = q.a.n;
+    const D = q.a.d;
+    const g = q.type === 'gcf' ? q.ans : q.k;
+    const s = [
+      `${N} 嘅因數：${factorsOf(N)}。`,
+      `${D} 嘅因數：${factorsOf(D)}。`,
+      `最大嘅共同因數係 ${g}。`
+    ];
+    if (q.type === 'simplify') {
+      s.push(`分子分母同除以 ${g}：${N} ÷ ${g} = ${q.ans.n}，${D} ÷ ${g} = ${q.ans.d}，得 ${q.ans.n}/${q.ans.d}。`);
+    }
+    return s;
+  }
+  if (q.type === 'toMixed') {
+    const { w, n, d } = q.ans;
+    return [
+      `${q.a.n} ÷ ${d} = ${w} 餘 ${n}。`,
+      `商 ${w} 係整數部分，餘數 ${n} 做分子，分母 ${d} 不變。`,
+      `所以 ${q.a.n}/${d} = ${w}又${n}/${d}。`
+    ];
+  }
+  if (q.type === 'toImproper') {
+    const { w, n, d } = q.m;
+    return [
+      `整數乘分母：${w} × ${d} = ${w * d}。`,
+      `加返分子：${w * d} + ${n} = ${q.ans.n}。`,
+      `分母不變，得 ${q.ans.n}/${d}。`
+    ];
+  }
+  if (q.type === 'mixedAddSub') {
+    const { m1, m2, op, L, an, bn, rn, imp, ans } = q;
+    const i1 = m1.w * m1.d + m1.n;
+    const i2 = m2.w * m2.d + m2.n;
+    const sym = op === '+' ? '+' : '−';
+    const word = op === '+' ? '加' : '減';
+    const s = [`化成假分數：${m1.w}又${m1.n}/${m1.d} = ${i1}/${m1.d}，${m2.w}又${m2.n}/${m2.d} = ${i2}/${m2.d}。`];
+    if (m1.d !== m2.d) s.push(`通分（公分母 ${L}）：${i1}/${m1.d} = ${an}/${L}，${i2}/${m2.d} = ${bn}/${L}。`);
+    s.push(`分子${word}分子：${an} ${sym} ${bn} = ${rn}，即 ${rn}/${L}。`);
+    if (gcd(rn, L) > 1) s.push(`約分：${rn}/${L} = ${imp.n}/${imp.d}。`);
+    s.push(`化成帶分數：${imp.n} ÷ ${imp.d} = ${ans.w} 餘 ${ans.n}，得 ${ans.w}又${ans.n}/${ans.d}。`);
+    return s;
+  }
+  if (q.type === 'lcd') {
+    return [
+      `寫出 ${q.a.d} 嘅倍數：${multiplesUpTo(q.a.d, q.ans)}……`,
+      `寫出 ${q.b.d} 嘅倍數：${multiplesUpTo(q.b.d, q.ans)}……`,
+      `最細嘅共同倍數係 ${q.ans}，所以最小公分母係 ${q.ans}。`
+    ];
+  }
+  return [
+    `分母由 ${q.a.d} 變成 ${q.D}，乘咗 ${q.k}。`,
+    `分子都要乘 ${q.k}：${q.a.n} × ${q.k} = ${q.ans}。`
+  ];
+}
+
+function answerText(q) {
+  if (q.type === 'toMixed' || q.type === 'mixedAddSub') return `${q.ans.w}又${q.ans.n}/${q.ans.d}`;
+  if (q.type === 'frac' || q.type === 'simplify' || q.type === 'toImproper') return `${q.ans.n}/${q.ans.d}`;
+  return String(q.ans);
+}
+
+// values to show in the answer boxes once the answer is revealed
+function answerSlots(q) {
+  if (q.type === 'toMixed' || q.type === 'mixedAddSub') return [String(q.ans.w), String(q.ans.n), String(q.ans.d)];
+  if (q.type === 'frac' || q.type === 'simplify' || q.type === 'toImproper') return [String(q.ans.n), String(q.ans.d), ''];
+  return [String(q.ans), '', ''];
+}
+// ==LOGIC-END==
+</script>
+
+<script>
+(function () {
+  'use strict';
+
+  var LEVELS = [
+    { name: '同分母加減', desc: '分母一樣，只加減分子，記住約分。' },
+    { name: '搵公分母', desc: '通分第一步：搵最小公分母、填等值分數。' },
+    { name: '簡單異分母', desc: '其中一個分母係另一個嘅倍數。' },
+    { name: '異分母大挑戰', desc: '要自己通分，答案可以係假分數。' },
+    { name: '約分', desc: '搵最大公因數，將分數約到最簡。', special: true },
+    { name: '假分數同帶分數', desc: '假分數同帶分數互相轉換。', special: true },
+    { name: '帶分數加減', desc: '帶分數加減，答案寫成最簡帶分數。', special: true }
+  ];
+  var MAIN = 4;
+  var KEY = 'fraction-hero-v1';
+  var progress = { stars: [0, 0, 0, 0, 0, 0, 0] };
+
+  var $ = function (s) { return document.querySelector(s); };
+  var screens = { home: $('#screen-home'), quiz: $('#screen-quiz'), result: $('#screen-result') };
+  function show(name) {
+    for (var k in screens) screens[k].hidden = k !== name;
+    window.scrollTo(0, 0);
+  }
+
+  function loadProgress() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (!raw) return;
+      var p = JSON.parse(raw);
+      if (p && Array.isArray(p.stars)) {
+        progress.stars = [0, 1, 2, 3, 4, 5, 6].map(function (i) { return Math.min(3, Math.max(0, p.stars[i] | 0)); });
+      }
+    } catch (e) { /* storage unavailable: start fresh */ }
+  }
+  function saveProgress() {
+    try { localStorage.setItem(KEY, JSON.stringify(progress)); } catch (e) { /* ignore */ }
+  }
+
+  /* ---------- drawing helpers ---------- */
+  function fracHTML(f, cls, fs) {
+    return '<span class="frac ' + (cls || '') + '"' + (fs ? ' style="--fs:' + fs + 'px"' : '') +
+      '><span class="n">' + f.n + '</span><span class="d">' + f.d + '</span></span>';
+  }
+  function mixedHTML(m, cls) {
+    return '<span class="mixed ' + (cls || '') + '"><span class="w">' + m.w + '</span>' + fracHTML(m, cls) + '</span>';
+  }
+  function pieSVG(n, d, fillVar) {
+    var r = 29, c = 32, s = '<svg class="pie" viewBox="0 0 64 64" role="img" aria-label="' + n + '/' + d + '">';
+    if (d < 2) return s + '<circle cx="32" cy="32" r="29" fill="' + (n ? fillVar : 'var(--pie-empty)') + '" stroke="var(--pie-line)" stroke-width="2"/></svg>';
+    for (var i = 0; i < d; i++) {
+      var a0 = -Math.PI / 2 + (i * 2 * Math.PI) / d;
+      var a1 = -Math.PI / 2 + ((i + 1) * 2 * Math.PI) / d;
+      var x0 = c + r * Math.cos(a0), y0 = c + r * Math.sin(a0);
+      var x1 = c + r * Math.cos(a1), y1 = c + r * Math.sin(a1);
+      s += '<path d="M' + c + ' ' + c + ' L' + x0.toFixed(2) + ' ' + y0.toFixed(2) +
+        ' A' + r + ' ' + r + ' 0 0 1 ' + x1.toFixed(2) + ' ' + y1.toFixed(2) + ' Z" fill="' +
+        (i < n ? fillVar : 'var(--pie-empty)') + '" stroke="var(--pie-line)" stroke-width="1.5" stroke-linejoin="round"/>';
+    }
+    return s + '</svg>';
+  }
+  function starsHTML(count, cls) {
+    var out = '';
+    for (var i = 0; i < 3; i++) out += '<span class="' + (i < count ? 'on' : 'off') + '" aria-hidden="true">★</span>';
+    return out;
+  }
+
+  /* ---------- home ---------- */
+  function renderHome() {
+    var total = progress.stars.reduce(function (a, b) { return a + b; }, 0);
+    $('#total-stars').textContent = total;
+    var examples = [
+      fracHTML({ n: 2, d: 7 }, 'fa') + '<span class="op">+</span>' + fracHTML({ n: 3, d: 7 }, 'fb'),
+      fracHTML({ n: 1, d: 4 }, 'fa') + '<span class="eq">=</span>' + '<span class="frac"><span class="n">?</span><span class="d">12</span></span>',
+      fracHTML({ n: 1, d: 2 }, 'fa') + '<span class="op">+</span>' + fracHTML({ n: 1, d: 6 }, 'fb'),
+      fracHTML({ n: 3, d: 4 }, 'fa') + '<span class="op">−</span>' + fracHTML({ n: 2, d: 5 }, 'fb'),
+      fracHTML({ n: 6, d: 8 }, 'fa') + '<span class="eq">=</span>' + fracHTML({ n: 3, d: 4 }, ''),
+      fracHTML({ n: 7, d: 3 }, 'fa') + '<span class="eq">=</span>' + mixedHTML({ w: 2, n: 1, d: 3 }, ''),
+      mixedHTML({ w: 1, n: 1, d: 2 }, 'fa') + '<span class="op">+</span>' + mixedHTML({ w: 2, n: 1, d: 3 }, 'fb')
+    ];
+    var list = $('#levels');
+    var spList = $('#specials');
+    list.innerHTML = '';
+    spList.innerHTML = '';
+    LEVELS.forEach(function (lv, i) {
+      var unlocked = lv.special || i === 0 || progress.stars[i - 1] >= 1;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'level';
+      btn.disabled = !unlocked;
+      var side = unlocked
+        ? '<span class="stars" role="img" aria-label="' + progress.stars[i] + ' 粒星，共 3 粒">' + starsHTML(progress.stars[i]) + '</span><span class="label">' + (progress.stars[i] ? '再練' : '開始') + '</span>'
+        : '<span class="label">未解鎖</span>';
+      btn.innerHTML =
+        '<span class="lv-num' + (lv.special ? ' sp' : '') + '">' + (lv.special ? i - MAIN + 1 : i + 1) + '</span>' +
+        '<span class="lv-main"><h3>' + lv.name + '</h3><p>' + (unlocked ? lv.desc : '先過上一關（最少 1 星）。') + '</p>' +
+        '<span class="lv-ex" aria-hidden="true">' + examples[i] + '</span></span>' +
+        '<span class="lv-side">' + side + '</span>';
+      btn.addEventListener('click', function () { startLevel(i); });
+      (lv.special ? spList : list).appendChild(btn);
+    });
+  }
+
+  /* ---------- quiz state ---------- */
+  var qs = [], qi = 0, correct = 0, lvIdx = 0;
+  var attempts = 0, hintShown = 0, answered = false, vals = ['', '', ''], active = 0;
+  var quitArmed = false, quitTimer = null;
+
+  function startLevel(i) {
+    lvIdx = i;
+    qs = generateSet(i + 1, 10);
+    qi = 0;
+    correct = 0;
+    show('quiz');
+    renderQuestion();
+  }
+
+  function levelTag() {
+    var lv = LEVELS[lvIdx];
+    return lv.special ? '專項練習 · ' + lv.name : '第 ' + (lvIdx + 1) + ' 關 · ' + lv.name;
+  }
+
+  function instruction(q) {
+    if (q.type === 'gcf') return '搵出分子同分母嘅最大公因數。';
+    if (q.type === 'simplify') return '約分：寫出最簡分數。';
+    if (q.type === 'toMixed') return '將假分數化成帶分數。';
+    if (q.type === 'toImproper') return '將帶分數化成假分數。';
+    if (q.type === 'mixedAddSub') return '計一計。答案寫成最簡帶分數。';
+    if (q.type === 'lcd') return '搵出兩個分數嘅最小公分母。';
+    if (q.type === 'equiv') return '通分：填返分子。';
+    return q.allowImproper ? '計一計。答案要最簡，分子可以大過分母。' : '計一計。答案要約到最簡。';
+  }
+
+  function ansFracHTML() {
+    return '<span class="frac ans"><span class="n"><button class="slot" type="button" data-i="0" aria-label="答案分子"></button></span>' +
+      '<span class="d"><button class="slot" type="button" data-i="1" aria-label="答案分母"></button></span></span>';
+  }
+  function ansMixedHTML() {
+    return '<span class="mixed ans"><button class="slot whole" type="button" data-i="0" aria-label="答案整數部分"></button>' +
+      '<span class="frac ans"><span class="n"><button class="slot" type="button" data-i="1" aria-label="答案分子"></button></span>' +
+      '<span class="d"><button class="slot" type="button" data-i="2" aria-label="答案分母"></button></span></span></span>';
+  }
+  function exprHTML(q) {
+    if (q.type === 'gcf') {
+      return '<div class="term">' + fracHTML(q.a, 'fa', 56) + '</div>' +
+        '<div class="break"></div>' +
+        '<span class="word">最大公因數 =</span>' +
+        '<button class="slot" type="button" data-i="0" aria-label="最大公因數"></button>';
+    }
+    if (q.type === 'simplify') {
+      return '<div class="term">' + fracHTML(q.a, 'fa', 56) + '</div>' +
+        '<span class="eq">=</span>' +
+        '<div class="term">' + ansFracHTML() + '</div>';
+    }
+    if (q.type === 'toMixed') {
+      return '<div class="term">' + fracHTML(q.a, 'fa', 56) + '</div>' +
+        '<span class="eq">=</span>' +
+        '<div class="term">' + ansMixedHTML() + '</div>';
+    }
+    if (q.type === 'toImproper') {
+      return '<div class="term">' + mixedHTML(q.m, 'fa') + '</div>' +
+        '<span class="eq">=</span>' +
+        '<div class="term">' + ansFracHTML() + '</div>';
+    }
+    if (q.type === 'mixedAddSub') {
+      return '<div class="term">' + mixedHTML(q.m1, 'fa') + '</div>' +
+        '<span class="op" aria-label="' + (q.op === '+' ? '加' : '減') + '">' + (q.op === '+' ? '+' : '−') + '</span>' +
+        '<div class="term">' + mixedHTML(q.m2, 'fb') + '</div>' +
+        '<div class="break"></div>' +
+        '<span class="eq">=</span>' +
+        '<div class="term">' + ansMixedHTML() + '</div>';
+    }
+    if (q.type === 'frac') {
+      return '<div class="term">' + fracHTML(q.a, 'fa') + pieSVG(q.a.n, q.a.d, 'var(--pie-a)') + '</div>' +
+        '<span class="op" aria-label="' + (q.op === '+' ? '加' : '減') + '">' + (q.op === '+' ? '+' : '−') + '</span>' +
+        '<div class="term">' + fracHTML(q.b, 'fb') + pieSVG(q.b.n, q.b.d, 'var(--pie-b)') + '</div>' +
+        '<span class="eq">=</span>' +
+        '<div class="term">' + ansFracHTML() + '</div>';
+    }
+    if (q.type === 'lcd') {
+      return '<div class="term">' + fracHTML(q.a, 'fa') + pieSVG(q.a.n, q.a.d, 'var(--pie-a)') + '</div>' +
+        '<span class="word">同</span>' +
+        '<div class="term">' + fracHTML(q.b, 'fb') + pieSVG(q.b.n, q.b.d, 'var(--pie-b)') + '</div>' +
+        '<div class="break"></div>' +
+        '<span class="word">最小公分母 =</span>' +
+        '<button class="slot" type="button" data-i="0" aria-label="最小公分母"></button>';
+    }
+    return '<div class="term">' + fracHTML(q.a, 'fa') + pieSVG(q.a.n, q.a.d, 'var(--pie-a)') + '</div>' +
+      '<span class="eq">=</span>' +
+      '<span class="frac ans"><span class="n"><button class="slot" type="button" data-i="0" aria-label="答案分子"></button></span>' +
+      '<span class="d fixed">' + q.D + '</span></span>';
+  }
+
+  function slotCount(q) {
+    if (q.type === 'toMixed' || q.type === 'mixedAddSub') return 3;
+    return q.type === 'frac' || q.type === 'simplify' || q.type === 'toImproper' ? 2 : 1;
+  }
+
+  function renderQuestion() {
+    var q = qs[qi];
+    answered = false; attempts = 0; hintShown = 0; vals = ['', '', '']; active = 0;
+    $('#q-count').textContent = (qi + 1) + ' / ' + qs.length;
+    $('#bar-fill').style.width = (qi / qs.length) * 100 + '%';
+    $('#progress').setAttribute('aria-valuenow', qi);
+    $('#level-name').textContent = levelTag();
+    $('#instr').textContent = instruction(q);
+    $('#expr').innerHTML = exprHTML(q);
+    Array.prototype.forEach.call(document.querySelectorAll('#expr .slot'), function (el) {
+      el.addEventListener('click', function () {
+        if (answered) return;
+        active = +el.getAttribute('data-i');
+        updateSlots();
+      });
+    });
+    setFeedback('', '');
+    var hint = $('#hint'); hint.hidden = true; hint.innerHTML = '';
+    var hb = $('#hint-btn'); hb.disabled = false; hb.textContent = '提示';
+    updateSlots();
+  }
+
+  function updateSlots() {
+    var q = qs[qi];
+    Array.prototype.forEach.call(document.querySelectorAll('#expr .slot'), function (el) {
+      var i = +el.getAttribute('data-i');
+      el.textContent = vals[i];
+      el.classList.toggle('active', !answered && i === active);
+      el.classList.toggle('filled', vals[i] !== '');
+    });
+    var enter = $('#enter');
+    var last = qi === qs.length - 1;
+    if (answered) enter.textContent = last ? '睇結果' : '下一題';
+    else if (slotCount(q) > 1 && active < slotCount(q) - 1 && vals[active + 1] === '') enter.textContent = slotCount(q) === 3 && active === 0 ? '填分子' : '填分母';
+    else enter.textContent = '確定';
+    Array.prototype.forEach.call(document.querySelectorAll('.key'), function (k) {
+      k.setAttribute('aria-disabled', answered && k.id !== 'enter' ? 'true' : 'false');
+    });
+  }
+
+  function setFeedback(kind, text) {
+    var fb = $('#feedback');
+    fb.className = 'feedback' + (kind ? ' ' + kind : '');
+    fb.textContent = text;
+  }
+  function shake() {
+    var card = document.querySelector('.qcard');
+    card.classList.remove('shake');
+    void card.offsetWidth;
+    card.classList.add('shake');
+  }
+
+  function renderHint() {
+    var q = qs[qi];
+    var steps = stepsFor(q);
+    var hint = $('#hint');
+    hint.hidden = hintShown === 0;
+    hint.innerHTML = '<ol>' + steps.slice(0, hintShown).map(function (s) { return '<li>' + s + '</li>'; }).join('') + '</ol>';
+    var hb = $('#hint-btn');
+    if (hintShown >= steps.length) { hb.disabled = true; hb.textContent = '提示齊晒'; }
+    else { hb.disabled = false; hb.textContent = hintShown === 0 ? '提示' : '再睇下一步'; }
+  }
+
+  var PRAISE = ['啱喇！', '叻呀！', '正確！', '做得好！', '好犀利！'];
+
+  function submit() {
+    if (answered) { next(); return; }
+    var q = qs[qi];
+    var n = slotCount(q);
+    if (n > 1 && active < n - 1 && vals[active + 1] === '') {
+      if (vals[active] === '') { setFeedback('info', n === 3 ? '先填整數，再填分子、分母。' : '先填分子，再填分母。'); shake(); return; }
+      active++; updateSlots(); return;
+    }
+    var nums = vals.slice(0, n).map(function (v) { return v === '' ? NaN : parseInt(v, 10); });
+    if (nums.some(function (x) { return isNaN(x); })) { setFeedback('info', '每一格都要填好先㩒確定。'); shake(); return; }
+    var r = checkAnswer(q, nums);
+    if (r === 'invalid') { setFeedback('info', '分母唔可以係 0，再檢查下。'); shake(); return; }
+    if (r === 'nonstandard') { setFeedback('info', '數值啱喇！不過分數部分要細過 1，而且要約到最簡。'); return; }
+    if (r === 'notgreatest') { setFeedback('info', nums[0] + ' 係公因數，不過唔係最大嗰個，再試下。'); shake(); return; }
+    if (r === 'unsimplified') { setFeedback('info', '數值啱喇！不過仲可以約分，約到最簡先算。'); return; }
+    if (r === 'notleast') { setFeedback('info', nums[0] + ' 係公分母，不過唔係最小嗰個，再試下。'); shake(); return; }
+    if (r === 'correct') {
+      answered = true; correct++;
+      setFeedback('good', (attempts > 0 ? '今次啱喇！' : PRAISE[Math.floor(Math.random() * PRAISE.length)]));
+      updateSlots();
+      return;
+    }
+    attempts++;
+    if (attempts === 1) {
+      setFeedback('bad', '唔啱喔，再諗下。想睇提示就㩒「提示」。');
+      shake();
+    } else {
+      answered = true;
+      vals = answerSlots(q);
+      hintShown = stepsFor(q).length;
+      setFeedback('bad', '答案係 ' + answerText(q) + '。睇下點做：');
+      renderHint();
+      updateSlots();
+    }
+  }
+
+  function next() {
+    if (qi < qs.length - 1) { qi++; renderQuestion(); } else { finish(); }
+  }
+
+  function press(k) {
+    if (screens.quiz.hidden) return;
+    if (k === 'enter') { submit(); return; }
+    if (answered) return;
+    if (k === 'back') { vals[active] = vals[active].slice(0, -1); }
+    else if (vals[active].length < 3) { vals[active] += k; }
+    updateSlots();
+  }
+
+  /* ---------- result ---------- */
+  function finish() {
+    $('#bar-fill').style.width = '100%';
+    var stars = correct >= 10 ? 3 : correct >= 8 ? 2 : correct >= 6 ? 1 : 0;
+    var improved = stars > progress.stars[lvIdx];
+    if (improved) { progress.stars[lvIdx] = stars; saveProgress(); }
+    $('#res-level').textContent = levelTag();
+    var rs = $('#res-stars');
+    rs.setAttribute('aria-label', stars + ' 粒星，共 3 粒');
+    rs.innerHTML = starsHTML(stars);
+    Array.prototype.forEach.call(rs.children, function (el, i) { el.classList.add('pop'); el.style.animationDelay = (i * 0.15) + 's'; });
+    var title = correct === 10 ? '全部啱！你係分數小英雄！' : correct >= 8 ? '好犀利！差少少就滿分' : correct >= 6 ? '過關喇！' : '再試多次，一定得';
+    $('#res-title').textContent = title;
+    var detail = '答啱 ' + correct + ' / ' + qs.length + ' 題。';
+    if (stars === 0) detail += '多用「提示」睇下點做，再試一次。';
+    else if (stars < 3) detail += '再練多次可以爭取更多星。';
+    $('#res-detail').textContent = detail;
+    var nextBtn = $('#res-next');
+    nextBtn.hidden = !(progress.stars[lvIdx] >= 1 && lvIdx < MAIN - 1);
+    show('result');
+  }
+
+  /* ---------- wiring ---------- */
+  document.getElementById('keypad').addEventListener('click', function (e) {
+    var b = e.target.closest('.key');
+    if (!b) return;
+    press(b.getAttribute('data-k'));
+    b.blur();
+  });
+  $('#hint-btn').addEventListener('click', function () {
+    if (answered) return;
+    var steps = stepsFor(qs[qi]);
+    if (hintShown < steps.length) hintShown++;
+    renderHint();
+    this.blur();
+  });
+  $('#quit').addEventListener('click', function () {
+    if (!quitArmed) {
+      quitArmed = true;
+      setFeedback('info', '再㩒一次 ✕ 就會離開今次練習。');
+      clearTimeout(quitTimer);
+      quitTimer = setTimeout(function () { quitArmed = false; if (!answered) setFeedback('', ''); }, 3000);
+      return;
+    }
+    quitArmed = false; renderHome(); show('home');
+  });
+  $('#res-again').addEventListener('click', function () { startLevel(lvIdx); });
+  $('#res-next').addEventListener('click', function () { startLevel(lvIdx + 1); });
+  $('#res-home').addEventListener('click', function () { renderHome(); show('home'); });
+
+  var resetArmed = false, resetTimer = null;
+  $('#reset').addEventListener('click', function () {
+    var btn = this;
+    if (!resetArmed) {
+      resetArmed = true;
+      btn.textContent = '再㩒一次確認清除';
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(function () { resetArmed = false; btn.textContent = '清除進度'; }, 3500);
+      return;
+    }
+    resetArmed = false; clearTimeout(resetTimer);
+    progress.stars = [0, 0, 0, 0, 0, 0, 0]; saveProgress();
+    btn.textContent = '清除進度';
+    renderHome();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (screens.quiz.hidden) return;
+    if (e.key >= '0' && e.key <= '9') { e.preventDefault(); press(e.key); }
+    else if (e.key === 'Backspace') { e.preventDefault(); press('back'); }
+    else if (e.key === 'Enter') { e.preventDefault(); press('enter'); }
+    else if (e.key === 'Tab' && qs[qi] && slotCount(qs[qi]) > 1 && !answered) { e.preventDefault(); active = (active + 1) % slotCount(qs[qi]); updateSlots(); }
+  });
+
+  /* hero decoration: three pies, 1/2, 1/3, 1/4 */
+  $('#hero-pies').innerHTML = pieSVG(1, 2, 'var(--pie-a)') + pieSVG(1, 3, 'var(--pie-b)') + pieSVG(1, 4, 'var(--pie-a)');
+
+  loadProgress();
+  renderHome();
+})();
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw.js").catch(function () {});
+  });
+}
+</script>
+</body>
+</html>
