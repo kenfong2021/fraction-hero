@@ -1,5 +1,5 @@
 // Offline support. Bump CACHE when index.html changes so phones pick up the new version.
-const CACHE = "fraction-hero-v2";
+const CACHE = "fraction-hero-v3";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png"];
 
 self.addEventListener("install", (e) => {

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-HK">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -7,14 +7,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="分數小英雄">
+<meta name="apple-mobile-web-app-title" content="Fraction Hero">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>:root{color-scheme:light}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
-<title>分數小英雄</title>
+<title>Fraction Hero</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Noto+Sans+HK:wght@400;500;700&display=swap">
 <style>
@@ -154,7 +154,8 @@ p { margin: 0; }
 
 /* ---------- home ---------- */
 .hero { display: flex; flex-direction: column; gap: 6px; padding-block: 8px 18px; }
-.hero-pies { display: flex; gap: 8px; margin-bottom: 6px; }
+.hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.hero-pies { display: flex; gap: 8px; }
 .hero-pies .pie { width: 44px; height: 44px; }
 .hero h1 { font-family: var(--font-display); font-size: 44px; font-weight: 700; line-height: 1.15; }
 .hero .sub { color: var(--muted); font-size: 17px; }
@@ -334,23 +335,26 @@ p { margin: 0; }
 <div class="app">
   <section id="screen-home">
     <header class="hero">
-      <div class="hero-pies" id="hero-pies" aria-hidden="true"></div>
-      <h1>分數小英雄</h1>
-      <p class="sub">一關一關練，通分、加減都唔怕。</p>
-      <p class="total"><span class="glyph" aria-hidden="true">★</span><span><b id="total-stars">0</b> / 21 粒星</span></p>
+      <div class="hero-top">
+        <div class="hero-pies" id="hero-pies" aria-hidden="true"></div>
+        <button id="lang" class="ghost" type="button" lang="zh-HK">廣東話</button>
+      </div>
+      <h1 data-t="title"></h1>
+      <p class="sub" data-t="sub"></p>
+      <p class="total"><span class="glyph" aria-hidden="true">★</span><span><b id="total-stars">0</b> <span data-t="ofStars"></span></span></p>
     </header>
     <div id="levels" class="levels"></div>
-    <h2 class="sec">專項練習</h2>
-    <p class="sec-sub">約分、帶分數，唔使解鎖，想練邊樣就練邊樣。</p>
+    <h2 class="sec" data-t="secTitle"></h2>
+    <p class="sec-sub" data-t="secSub"></p>
     <div id="specials" class="levels"></div>
-    <p class="rule">每關 10 題。答啱 6 題過關得 1 星，8 題得 2 星，全中得 3 星。過咗主線關卡就會解鎖下一關。</p>
-    <button id="reset" class="ghost" type="button">清除進度</button>
+    <p class="rule" data-t="rule"></p>
+    <button id="reset" class="ghost" type="button" data-t="reset"></button>
   </section>
 
   <section id="screen-quiz" hidden>
     <div class="topbar">
-      <button id="quit" class="icon-btn" type="button" aria-label="離開練習">✕</button>
-      <div class="progress" id="progress" role="progressbar" aria-label="練習進度" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0"><span id="bar-fill"></span></div>
+      <button id="quit" class="icon-btn" type="button" data-t-aria="quitAria">✕</button>
+      <div class="progress" id="progress" role="progressbar" data-t-aria="progressAria" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0"><span id="bar-fill"></span></div>
       <span id="q-count" class="count">1 / 10</span>
     </div>
     <div class="qcard">
@@ -360,7 +364,7 @@ p { margin: 0; }
     </div>
     <div class="status">
       <div id="feedback" class="feedback" aria-live="polite"></div>
-      <button id="hint-btn" class="ghost" type="button">提示</button>
+      <button id="hint-btn" class="ghost" type="button">Hint</button>
     </div>
     <div id="hint" class="hint" hidden></div>
     <div class="keypad" id="keypad">
@@ -373,9 +377,9 @@ p { margin: 0; }
       <button class="key" type="button" data-k="7">7</button>
       <button class="key" type="button" data-k="8">8</button>
       <button class="key" type="button" data-k="9">9</button>
-      <button class="key" type="button" data-k="back" aria-label="刪除">⌫</button>
+      <button class="key" type="button" data-k="back" data-t-aria="deleteAria">⌫</button>
       <button class="key" type="button" data-k="0">0</button>
-      <button class="key enter" type="button" data-k="enter" id="enter">確定</button>
+      <button class="key enter" type="button" data-k="enter" id="enter">Check</button>
     </div>
   </section>
 
@@ -387,15 +391,19 @@ p { margin: 0; }
       <p id="res-detail"></p>
     </div>
     <div class="res-actions">
-      <button id="res-next" class="primary" type="button" hidden>下一關</button>
-      <button id="res-again" class="primary" type="button">再玩一次</button>
-      <button id="res-home" class="ghost" type="button">返回主頁</button>
+      <button id="res-next" class="primary" type="button" data-t="nextLevel" hidden></button>
+      <button id="res-again" class="primary" type="button" data-t="again"></button>
+      <button id="res-home" class="ghost" type="button" data-t="home"></button>
     </div>
   </section>
 </div>
 
 <script>
 // ==LOGIC-START==
+let LANG = 'en';
+const T = (zh, en) => (LANG === 'zh' ? zh : en);
+const setLang = (l) => { LANG = l === 'zh' ? 'zh' : 'en'; };
+const mx = (w, n, d) => (LANG === 'zh' ? `${w}又${n}/${d}` : `${w} ${n}/${d}`);
 const gcd = (a, b) => (b ? gcd(b, a % b) : Math.abs(a));
 const lcm = (a, b) => (a / gcd(a, b)) * b;
 const rnd = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
@@ -537,7 +545,7 @@ function genMixedAddSub() {
 function factorsOf(n) {
   const f = [];
   for (let i = 1; i <= n; i++) if (n % i === 0) f.push(i);
-  return f.join('、');
+  return f.join(T('、', ', '));
 }
 
 function questionKey(q) {
@@ -598,26 +606,31 @@ function checkAnswer(q, vals) {
 function multiplesUpTo(d, L) {
   const out = [];
   for (let m = d; m <= L; m += d) out.push(m);
-  return out.join('、');
+  return out.join(T('、', ', '));
 }
 
 function stepsFor(q) {
   if (q.type === 'frac') {
     const { a, b, op, L, an, bn, rn, ans } = q;
     const sym = op === '+' ? '+' : '−';
-    const word = op === '+' ? '加' : '減';
+    const word = op === '+' ? T('加', 'add') : T('減', 'subtract');
     const s = [];
     if (a.d === b.d) {
-      s.push(`分母一樣（都係 ${a.d}），唔使通分。`);
+      s.push(T(`分母一樣（都係 ${a.d}），唔使通分。`, `The denominators are the same (${a.d}), so there is no need to match them.`));
     } else {
-      s.push(`搵公分母：${a.d} 同 ${b.d} 嘅最小公倍數係 ${L}。`);
-      const conv = (f, nn) => (f.d === L ? `${f.n}/${f.d} 唔使變` : `${f.n}/${f.d} = ${nn}/${L}`);
-      s.push(`通分：${conv(a, an)}，${conv(b, bn)}。`);
+      s.push(T(`搵公分母：${a.d} 同 ${b.d} 嘅最小公倍數係 ${L}。`, `Find a common denominator: the least common multiple of ${a.d} and ${b.d} is ${L}.`));
+      const conv = (f, nn) => (f.d === L
+        ? T(`${f.n}/${f.d} 唔使變`, `${f.n}/${f.d} stays the same`)
+        : `${f.n}/${f.d} = ${nn}/${L}`);
+      s.push(T(`通分：${conv(a, an)}，${conv(b, bn)}。`, `Convert: ${conv(a, an)}, ${conv(b, bn)}.`));
     }
-    s.push(`分母保持 ${L}，分子${word}分子：${an} ${sym} ${bn} = ${rn}，即 ${rn}/${L}。`);
+    s.push(T(`分母保持 ${L}，分子${word}分子：${an} ${sym} ${bn} = ${rn}，即 ${rn}/${L}。`,
+      `Keep the denominator ${L} and ${word} the numerators: ${an} ${sym} ${bn} = ${rn}, so ${rn}/${L}.`));
     const g = gcd(rn, L);
-    s.push(g > 1 ? `約分：${rn}/${L} 上下同除以 ${g}，得 ${ans.n}/${ans.d}。` : `${rn}/${L} 已經係最簡分數。`);
-    if (rn > L) s.push(`${ans.n}/${ans.d} 分子大過分母，係假分數，可以咁寫。`);
+    s.push(g > 1
+      ? T(`約分：${rn}/${L} 上下同除以 ${g}，得 ${ans.n}/${ans.d}。`, `Simplify: divide the top and bottom of ${rn}/${L} by ${g} to get ${ans.n}/${ans.d}.`)
+      : T(`${rn}/${L} 已經係最簡分數。`, `${rn}/${L} is already in lowest terms.`));
+    if (rn > L) s.push(T(`${ans.n}/${ans.d} 分子大過分母，係假分數，可以咁寫。`, `${ans.n}/${ans.d} has a numerator bigger than the denominator. It is an improper fraction, so you can leave it like this.`));
     return s;
   }
   if (q.type === 'simplify' || q.type === 'gcf') {
@@ -625,29 +638,30 @@ function stepsFor(q) {
     const D = q.a.d;
     const g = q.type === 'gcf' ? q.ans : q.k;
     const s = [
-      `${N} 嘅因數：${factorsOf(N)}。`,
-      `${D} 嘅因數：${factorsOf(D)}。`,
-      `最大嘅共同因數係 ${g}。`
+      T(`${N} 嘅因數：${factorsOf(N)}。`, `Factors of ${N}: ${factorsOf(N)}.`),
+      T(`${D} 嘅因數：${factorsOf(D)}。`, `Factors of ${D}: ${factorsOf(D)}.`),
+      T(`最大嘅共同因數係 ${g}。`, `The greatest common factor is ${g}.`)
     ];
     if (q.type === 'simplify') {
-      s.push(`分子分母同除以 ${g}：${N} ÷ ${g} = ${q.ans.n}，${D} ÷ ${g} = ${q.ans.d}，得 ${q.ans.n}/${q.ans.d}。`);
+      s.push(T(`分子分母同除以 ${g}：${N} ÷ ${g} = ${q.ans.n}，${D} ÷ ${g} = ${q.ans.d}，得 ${q.ans.n}/${q.ans.d}。`,
+        `Divide the top and bottom by ${g}: ${N} ÷ ${g} = ${q.ans.n} and ${D} ÷ ${g} = ${q.ans.d}, giving ${q.ans.n}/${q.ans.d}.`));
     }
     return s;
   }
   if (q.type === 'toMixed') {
     const { w, n, d } = q.ans;
     return [
-      `${q.a.n} ÷ ${d} = ${w} 餘 ${n}。`,
-      `商 ${w} 係整數部分，餘數 ${n} 做分子，分母 ${d} 不變。`,
-      `所以 ${q.a.n}/${d} = ${w}又${n}/${d}。`
+      T(`${q.a.n} ÷ ${d} = ${w} 餘 ${n}。`, `${q.a.n} ÷ ${d} = ${w} remainder ${n}.`),
+      T(`商 ${w} 係整數部分，餘數 ${n} 做分子，分母 ${d} 不變。`, `The quotient ${w} is the whole number, the remainder ${n} is the numerator, and the denominator ${d} stays the same.`),
+      T(`所以 ${q.a.n}/${d} = ${mx(w, n, d)}。`, `So ${q.a.n}/${d} = ${mx(w, n, d)}.`)
     ];
   }
   if (q.type === 'toImproper') {
     const { w, n, d } = q.m;
     return [
-      `整數乘分母：${w} × ${d} = ${w * d}。`,
-      `加返分子：${w * d} + ${n} = ${q.ans.n}。`,
-      `分母不變，得 ${q.ans.n}/${d}。`
+      T(`整數乘分母：${w} × ${d} = ${w * d}。`, `Whole number × denominator: ${w} × ${d} = ${w * d}.`),
+      T(`加返分子：${w * d} + ${n} = ${q.ans.n}。`, `Add the numerator: ${w * d} + ${n} = ${q.ans.n}.`),
+      T(`分母不變，得 ${q.ans.n}/${d}。`, `Keep the denominator: ${q.ans.n}/${d}.`)
     ];
   }
   if (q.type === 'mixedAddSub') {
@@ -655,29 +669,32 @@ function stepsFor(q) {
     const i1 = m1.w * m1.d + m1.n;
     const i2 = m2.w * m2.d + m2.n;
     const sym = op === '+' ? '+' : '−';
-    const word = op === '+' ? '加' : '減';
-    const s = [`化成假分數：${m1.w}又${m1.n}/${m1.d} = ${i1}/${m1.d}，${m2.w}又${m2.n}/${m2.d} = ${i2}/${m2.d}。`];
-    if (m1.d !== m2.d) s.push(`通分（公分母 ${L}）：${i1}/${m1.d} = ${an}/${L}，${i2}/${m2.d} = ${bn}/${L}。`);
-    s.push(`分子${word}分子：${an} ${sym} ${bn} = ${rn}，即 ${rn}/${L}。`);
-    if (gcd(rn, L) > 1) s.push(`約分：${rn}/${L} = ${imp.n}/${imp.d}。`);
-    s.push(`化成帶分數：${imp.n} ÷ ${imp.d} = ${ans.w} 餘 ${ans.n}，得 ${ans.w}又${ans.n}/${ans.d}。`);
+    const word = op === '+' ? T('加', 'add') : T('減', 'subtract');
+    const s = [T(`化成假分數：${mx(m1.w, m1.n, m1.d)} = ${i1}/${m1.d}，${mx(m2.w, m2.n, m2.d)} = ${i2}/${m2.d}。`,
+      `Change to improper fractions: ${mx(m1.w, m1.n, m1.d)} = ${i1}/${m1.d} and ${mx(m2.w, m2.n, m2.d)} = ${i2}/${m2.d}.`)];
+    if (m1.d !== m2.d) s.push(T(`通分（公分母 ${L}）：${i1}/${m1.d} = ${an}/${L}，${i2}/${m2.d} = ${bn}/${L}。`,
+      `Use a common denominator (${L}): ${i1}/${m1.d} = ${an}/${L} and ${i2}/${m2.d} = ${bn}/${L}.`));
+    s.push(T(`分子${word}分子：${an} ${sym} ${bn} = ${rn}，即 ${rn}/${L}。`, `${word[0].toUpperCase() + word.slice(1)} the numerators: ${an} ${sym} ${bn} = ${rn}, so ${rn}/${L}.`));
+    if (gcd(rn, L) > 1) s.push(T(`約分：${rn}/${L} = ${imp.n}/${imp.d}。`, `Simplify: ${rn}/${L} = ${imp.n}/${imp.d}.`));
+    s.push(T(`化成帶分數：${imp.n} ÷ ${imp.d} = ${ans.w} 餘 ${ans.n}，得 ${mx(ans.w, ans.n, ans.d)}。`,
+      `Change to a mixed number: ${imp.n} ÷ ${imp.d} = ${ans.w} remainder ${ans.n}, giving ${mx(ans.w, ans.n, ans.d)}.`));
     return s;
   }
   if (q.type === 'lcd') {
     return [
-      `寫出 ${q.a.d} 嘅倍數：${multiplesUpTo(q.a.d, q.ans)}……`,
-      `寫出 ${q.b.d} 嘅倍數：${multiplesUpTo(q.b.d, q.ans)}……`,
-      `最細嘅共同倍數係 ${q.ans}，所以最小公分母係 ${q.ans}。`
+      T(`寫出 ${q.a.d} 嘅倍數：${multiplesUpTo(q.a.d, q.ans)}……`, `Multiples of ${q.a.d}: ${multiplesUpTo(q.a.d, q.ans)}...`),
+      T(`寫出 ${q.b.d} 嘅倍數：${multiplesUpTo(q.b.d, q.ans)}……`, `Multiples of ${q.b.d}: ${multiplesUpTo(q.b.d, q.ans)}...`),
+      T(`最細嘅共同倍數係 ${q.ans}，所以最小公分母係 ${q.ans}。`, `The smallest shared multiple is ${q.ans}, so the least common denominator is ${q.ans}.`)
     ];
   }
   return [
-    `分母由 ${q.a.d} 變成 ${q.D}，乘咗 ${q.k}。`,
-    `分子都要乘 ${q.k}：${q.a.n} × ${q.k} = ${q.ans}。`
+    T(`分母由 ${q.a.d} 變成 ${q.D}，乘咗 ${q.k}。`, `The denominator changed from ${q.a.d} to ${q.D}: it was multiplied by ${q.k}.`),
+    T(`分子都要乘 ${q.k}：${q.a.n} × ${q.k} = ${q.ans}。`, `Multiply the numerator by ${q.k} too: ${q.a.n} × ${q.k} = ${q.ans}.`)
   ];
 }
 
 function answerText(q) {
-  if (q.type === 'toMixed' || q.type === 'mixedAddSub') return `${q.ans.w}又${q.ans.n}/${q.ans.d}`;
+  if (q.type === 'toMixed' || q.type === 'mixedAddSub') return mx(q.ans.w, q.ans.n, q.ans.d);
   if (q.type === 'frac' || q.type === 'simplify' || q.type === 'toImproper') return `${q.ans.n}/${q.ans.d}`;
   return String(q.ans);
 }
@@ -695,15 +712,54 @@ function answerSlots(q) {
 (function () {
   'use strict';
 
+  var LANGKEY = 'fraction-hero-lang';
+  var lang = 'en';
+  try { if (localStorage.getItem(LANGKEY) === 'zh') lang = 'zh'; } catch (e) { /* ignore */ }
+  setLang(lang);
+  function t(zh, en) { return lang === 'zh' ? zh : en; }
+
   var LEVELS = [
-    { name: '同分母加減', desc: '分母一樣，只加減分子，記住約分。' },
-    { name: '搵公分母', desc: '通分第一步：搵最小公分母、填等值分數。' },
-    { name: '簡單異分母', desc: '其中一個分母係另一個嘅倍數。' },
-    { name: '異分母大挑戰', desc: '要自己通分，答案可以係假分數。' },
-    { name: '約分', desc: '搵最大公因數，將分數約到最簡。', special: true },
-    { name: '假分數同帶分數', desc: '假分數同帶分數互相轉換。', special: true },
-    { name: '帶分數加減', desc: '帶分數加減，答案寫成最簡帶分數。', special: true }
+    { name: ['同分母加減', 'Same denominators'], desc: ['分母一樣，只加減分子，記住約分。', 'Add or subtract the numerators. Remember to simplify.'] },
+    { name: ['搵公分母', 'Common denominators'], desc: ['通分第一步：搵最小公分母、填等值分數。', 'Find the least common denominator and fill in equivalent fractions.'] },
+    { name: ['簡單異分母', 'Easy unlike denominators'], desc: ['其中一個分母係另一個嘅倍數。', 'One denominator is a multiple of the other.'] },
+    { name: ['異分母大挑戰', 'Big challenge'], desc: ['要自己通分，答案可以係假分數。', 'Match the denominators yourself. Answers can be improper fractions.'] },
+    { name: ['約分', 'Simplifying'], desc: ['搵最大公因數，將分數約到最簡。', 'Find the greatest common factor and reduce fractions.'], special: true },
+    { name: ['假分數同帶分數', 'Improper and mixed'], desc: ['假分數同帶分數互相轉換。', 'Switch between improper fractions and mixed numbers.'], special: true },
+    { name: ['帶分數加減', 'Mixed number +/−'], desc: ['帶分數加減，答案寫成最簡帶分數。', 'Add and subtract mixed numbers. Write the answer as a mixed number.'], special: true }
   ];
+  function lvName(i) { return LEVELS[i].name[lang === 'zh' ? 0 : 1]; }
+  function lvDesc(i) { return LEVELS[i].desc[lang === 'zh' ? 0 : 1]; }
+
+  var STATIC = {
+    title: ['分數小英雄', 'Fraction Hero'],
+    sub: ['一關一關練，通分、加減都唔怕。', 'Level by level, fractions get easy.'],
+    ofStars: ['/ 21 粒星', '/ 21 stars'],
+    secTitle: ['專項練習', 'Practice topics'],
+    secSub: ['約分、帶分數，唔使解鎖，想練邊樣就練邊樣。', 'Simplifying and mixed numbers. Always open, so pick what you want to practise.'],
+    rule: ['每關 10 題。答啱 6 題過關得 1 星，8 題得 2 星，全中得 3 星。過咗主線關卡就會解鎖下一關。',
+      'Each level has 10 questions. 6 correct earns 1 star, 8 earns 2 stars and all 10 earns 3 stars. Pass a main level to unlock the next one.'],
+    reset: ['清除進度', 'Reset progress'],
+    nextLevel: ['下一關', 'Next level'],
+    again: ['再玩一次', 'Play again'],
+    home: ['返回主頁', 'Back to home']
+  };
+  var STATIC_ARIA = {
+    quitAria: ['離開練習', 'Leave practice'],
+    progressAria: ['練習進度', 'Progress'],
+    deleteAria: ['刪除', 'Delete']
+  };
+  function applyStatic() {
+    document.documentElement.lang = lang === 'zh' ? 'zh-HK' : 'en';
+    document.title = STATIC.title[lang === 'zh' ? 0 : 1];
+    Array.prototype.forEach.call(document.querySelectorAll('[data-t]'), function (el) {
+      el.textContent = STATIC[el.getAttribute('data-t')][lang === 'zh' ? 0 : 1];
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-t-aria]'), function (el) {
+      el.setAttribute('aria-label', STATIC_ARIA[el.getAttribute('data-t-aria')][lang === 'zh' ? 0 : 1]);
+    });
+    $('#lang').textContent = lang === 'zh' ? 'English' : '廣東話';
+    $('#lang').setAttribute('lang', lang === 'zh' ? 'en' : 'zh-HK');
+  }
   var MAIN = 4;
   var KEY = 'fraction-hero-v1';
   var progress = { stars: [0, 0, 0, 0, 0, 0, 0] };
@@ -759,6 +815,7 @@ function answerSlots(q) {
 
   /* ---------- home ---------- */
   function renderHome() {
+    applyStatic();
     var total = progress.stars.reduce(function (a, b) { return a + b; }, 0);
     $('#total-stars').textContent = total;
     var examples = [
@@ -781,11 +838,11 @@ function answerSlots(q) {
       btn.className = 'level';
       btn.disabled = !unlocked;
       var side = unlocked
-        ? '<span class="stars" role="img" aria-label="' + progress.stars[i] + ' 粒星，共 3 粒">' + starsHTML(progress.stars[i]) + '</span><span class="label">' + (progress.stars[i] ? '再練' : '開始') + '</span>'
-        : '<span class="label">未解鎖</span>';
+        ? '<span class="stars" role="img" aria-label="' + t(progress.stars[i] + ' 粒星，共 3 粒', progress.stars[i] + ' of 3 stars') + '">' + starsHTML(progress.stars[i]) + '</span><span class="label">' + (progress.stars[i] ? t('再練', 'Again') : t('開始', 'Start')) + '</span>'
+        : '<span class="label">' + t('未解鎖', 'Locked') + '</span>';
       btn.innerHTML =
         '<span class="lv-num' + (lv.special ? ' sp' : '') + '">' + (lv.special ? i - MAIN + 1 : i + 1) + '</span>' +
-        '<span class="lv-main"><h3>' + lv.name + '</h3><p>' + (unlocked ? lv.desc : '先過上一關（最少 1 星）。') + '</p>' +
+        '<span class="lv-main"><h3>' + lvName(i) + '</h3><p>' + (unlocked ? lvDesc(i) : t('先過上一關（最少 1 星）。', 'Earn at least 1 star on the previous level first.')) + '</p>' +
         '<span class="lv-ex" aria-hidden="true">' + examples[i] + '</span></span>' +
         '<span class="lv-side">' + side + '</span>';
       btn.addEventListener('click', function () { startLevel(i); });
@@ -809,35 +866,35 @@ function answerSlots(q) {
 
   function levelTag() {
     var lv = LEVELS[lvIdx];
-    return lv.special ? '專項練習 · ' + lv.name : '第 ' + (lvIdx + 1) + ' 關 · ' + lv.name;
+    return lv.special ? t('專項練習 · ', 'Practice · ') + lvName(lvIdx) : t('第 ' + (lvIdx + 1) + ' 關 · ', 'Level ' + (lvIdx + 1) + ' · ') + lvName(lvIdx);
   }
 
   function instruction(q) {
-    if (q.type === 'gcf') return '搵出分子同分母嘅最大公因數。';
-    if (q.type === 'simplify') return '約分：寫出最簡分數。';
-    if (q.type === 'toMixed') return '將假分數化成帶分數。';
-    if (q.type === 'toImproper') return '將帶分數化成假分數。';
-    if (q.type === 'mixedAddSub') return '計一計。答案寫成最簡帶分數。';
-    if (q.type === 'lcd') return '搵出兩個分數嘅最小公分母。';
-    if (q.type === 'equiv') return '通分：填返分子。';
-    return q.allowImproper ? '計一計。答案要最簡，分子可以大過分母。' : '計一計。答案要約到最簡。';
+    if (q.type === 'gcf') return t('搵出分子同分母嘅最大公因數。', 'Find the greatest common factor of the numerator and denominator.');
+    if (q.type === 'simplify') return t('約分：寫出最簡分數。', 'Simplify: write the fraction in lowest terms.');
+    if (q.type === 'toMixed') return t('將假分數化成帶分數。', 'Change the improper fraction to a mixed number.');
+    if (q.type === 'toImproper') return t('將帶分數化成假分數。', 'Change the mixed number to an improper fraction.');
+    if (q.type === 'mixedAddSub') return t('計一計。答案寫成最簡帶分數。', 'Work it out. Write the answer as a mixed number in lowest terms.');
+    if (q.type === 'lcd') return t('搵出兩個分數嘅最小公分母。', 'Find the least common denominator of the two fractions.');
+    if (q.type === 'equiv') return t('通分：填返分子。', 'Fill in the numerator to make equivalent fractions.');
+    return q.allowImproper ? t('計一計。答案要最簡，分子可以大過分母。', 'Work it out. Simplify the answer. The numerator may be bigger than the denominator.') : t('計一計。答案要約到最簡。', 'Work it out. Simplify your answer.');
   }
 
   function ansFracHTML() {
-    return '<span class="frac ans"><span class="n"><button class="slot" type="button" data-i="0" aria-label="答案分子"></button></span>' +
-      '<span class="d"><button class="slot" type="button" data-i="1" aria-label="答案分母"></button></span></span>';
+    return '<span class="frac ans"><span class="n"><button class="slot" type="button" data-i="0" aria-label="' + t('答案分子', 'Answer numerator') + '"></button></span>' +
+      '<span class="d"><button class="slot" type="button" data-i="1" aria-label="' + t('答案分母', 'Answer denominator') + '"></button></span></span>';
   }
   function ansMixedHTML() {
-    return '<span class="mixed ans"><button class="slot whole" type="button" data-i="0" aria-label="答案整數部分"></button>' +
-      '<span class="frac ans"><span class="n"><button class="slot" type="button" data-i="1" aria-label="答案分子"></button></span>' +
-      '<span class="d"><button class="slot" type="button" data-i="2" aria-label="答案分母"></button></span></span></span>';
+    return '<span class="mixed ans"><button class="slot whole" type="button" data-i="0" aria-label="' + t('答案整數部分', 'Answer whole number') + '"></button>' +
+      '<span class="frac ans"><span class="n"><button class="slot" type="button" data-i="1" aria-label="' + t('答案分子', 'Answer numerator') + '"></button></span>' +
+      '<span class="d"><button class="slot" type="button" data-i="2" aria-label="' + t('答案分母', 'Answer denominator') + '"></button></span></span></span>';
   }
   function exprHTML(q) {
     if (q.type === 'gcf') {
       return '<div class="term">' + fracHTML(q.a, 'fa', 56) + '</div>' +
         '<div class="break"></div>' +
-        '<span class="word">最大公因數 =</span>' +
-        '<button class="slot" type="button" data-i="0" aria-label="最大公因數"></button>';
+        '<span class="word">' + t('最大公因數 =', 'Greatest common factor =') + '</span>' +
+        '<button class="slot" type="button" data-i="0" aria-label="' + t('最大公因數', 'Greatest common factor') + '"></button>';
     }
     if (q.type === 'simplify') {
       return '<div class="term">' + fracHTML(q.a, 'fa', 56) + '</div>' +
@@ -856,7 +913,7 @@ function answerSlots(q) {
     }
     if (q.type === 'mixedAddSub') {
       return '<div class="term">' + mixedHTML(q.m1, 'fa') + '</div>' +
-        '<span class="op" aria-label="' + (q.op === '+' ? '加' : '減') + '">' + (q.op === '+' ? '+' : '−') + '</span>' +
+        '<span class="op" aria-label="' + (q.op === '+' ? t('加', 'plus') : t('減', 'minus')) + '">' + (q.op === '+' ? '+' : '−') + '</span>' +
         '<div class="term">' + mixedHTML(q.m2, 'fb') + '</div>' +
         '<div class="break"></div>' +
         '<span class="eq">=</span>' +
@@ -864,18 +921,18 @@ function answerSlots(q) {
     }
     if (q.type === 'frac') {
       return '<div class="term">' + fracHTML(q.a, 'fa') + pieSVG(q.a.n, q.a.d, 'var(--pie-a)') + '</div>' +
-        '<span class="op" aria-label="' + (q.op === '+' ? '加' : '減') + '">' + (q.op === '+' ? '+' : '−') + '</span>' +
+        '<span class="op" aria-label="' + (q.op === '+' ? t('加', 'plus') : t('減', 'minus')) + '">' + (q.op === '+' ? '+' : '−') + '</span>' +
         '<div class="term">' + fracHTML(q.b, 'fb') + pieSVG(q.b.n, q.b.d, 'var(--pie-b)') + '</div>' +
         '<span class="eq">=</span>' +
         '<div class="term">' + ansFracHTML() + '</div>';
     }
     if (q.type === 'lcd') {
       return '<div class="term">' + fracHTML(q.a, 'fa') + pieSVG(q.a.n, q.a.d, 'var(--pie-a)') + '</div>' +
-        '<span class="word">同</span>' +
+        '<span class="word">' + t('同', 'and') + '</span>' +
         '<div class="term">' + fracHTML(q.b, 'fb') + pieSVG(q.b.n, q.b.d, 'var(--pie-b)') + '</div>' +
         '<div class="break"></div>' +
-        '<span class="word">最小公分母 =</span>' +
-        '<button class="slot" type="button" data-i="0" aria-label="最小公分母"></button>';
+        '<span class="word">' + t('最小公分母 =', 'Least common denominator =') + '</span>' +
+        '<button class="slot" type="button" data-i="0" aria-label="' + t('最小公分母', 'Least common denominator') + '"></button>';
     }
     return '<div class="term">' + fracHTML(q.a, 'fa') + pieSVG(q.a.n, q.a.d, 'var(--pie-a)') + '</div>' +
       '<span class="eq">=</span>' +
@@ -906,7 +963,7 @@ function answerSlots(q) {
     });
     setFeedback('', '');
     var hint = $('#hint'); hint.hidden = true; hint.innerHTML = '';
-    var hb = $('#hint-btn'); hb.disabled = false; hb.textContent = '提示';
+    var hb = $('#hint-btn'); hb.disabled = false; hb.textContent = t('提示', 'Hint');
     updateSlots();
   }
 
@@ -920,9 +977,9 @@ function answerSlots(q) {
     });
     var enter = $('#enter');
     var last = qi === qs.length - 1;
-    if (answered) enter.textContent = last ? '睇結果' : '下一題';
-    else if (slotCount(q) > 1 && active < slotCount(q) - 1 && vals[active + 1] === '') enter.textContent = slotCount(q) === 3 && active === 0 ? '填分子' : '填分母';
-    else enter.textContent = '確定';
+    if (answered) enter.textContent = last ? t('睇結果', 'Results') : t('下一題', 'Next');
+    else if (slotCount(q) > 1 && active < slotCount(q) - 1 && vals[active + 1] === '') enter.textContent = slotCount(q) === 3 && active === 0 ? t('填分子', 'Numerator') : t('填分母', 'Denominator');
+    else enter.textContent = t('確定', 'Check');
     Array.prototype.forEach.call(document.querySelectorAll('.key'), function (k) {
       k.setAttribute('aria-disabled', answered && k.id !== 'enter' ? 'true' : 'false');
     });
@@ -947,43 +1004,45 @@ function answerSlots(q) {
     hint.hidden = hintShown === 0;
     hint.innerHTML = '<ol>' + steps.slice(0, hintShown).map(function (s) { return '<li>' + s + '</li>'; }).join('') + '</ol>';
     var hb = $('#hint-btn');
-    if (hintShown >= steps.length) { hb.disabled = true; hb.textContent = '提示齊晒'; }
-    else { hb.disabled = false; hb.textContent = hintShown === 0 ? '提示' : '再睇下一步'; }
+    if (hintShown >= steps.length) { hb.disabled = true; hb.textContent = t('提示齊晒', 'All hints shown'); }
+    else { hb.disabled = false; hb.textContent = hintShown === 0 ? t('提示', 'Hint') : t('再睇下一步', 'Next step'); }
   }
 
-  var PRAISE = ['啱喇！', '叻呀！', '正確！', '做得好！', '好犀利！'];
+  var PRAISE_ZH = ['啱喇！', '叻呀！', '正確！', '做得好！', '好犀利！'];
+  var PRAISE_EN = ['Correct!', 'Great job!', 'Nice one!', 'Well done!', 'Awesome!'];
 
   function submit() {
     if (answered) { next(); return; }
     var q = qs[qi];
     var n = slotCount(q);
     if (n > 1 && active < n - 1 && vals[active + 1] === '') {
-      if (vals[active] === '') { setFeedback('info', n === 3 ? '先填整數，再填分子、分母。' : '先填分子，再填分母。'); shake(); return; }
+      if (vals[active] === '') { setFeedback('info', n === 3 ? t('先填整數，再填分子、分母。', 'Fill in the whole number first, then the numerator and denominator.') : t('先填分子，再填分母。', 'Fill in the numerator first, then the denominator.')); shake(); return; }
       active++; updateSlots(); return;
     }
     var nums = vals.slice(0, n).map(function (v) { return v === '' ? NaN : parseInt(v, 10); });
-    if (nums.some(function (x) { return isNaN(x); })) { setFeedback('info', '每一格都要填好先㩒確定。'); shake(); return; }
+    if (nums.some(function (x) { return isNaN(x); })) { setFeedback('info', t('每一格都要填好先㩒確定。', 'Fill in every box before pressing Check.')); shake(); return; }
     var r = checkAnswer(q, nums);
-    if (r === 'invalid') { setFeedback('info', '分母唔可以係 0，再檢查下。'); shake(); return; }
-    if (r === 'nonstandard') { setFeedback('info', '數值啱喇！不過分數部分要細過 1，而且要約到最簡。'); return; }
-    if (r === 'notgreatest') { setFeedback('info', nums[0] + ' 係公因數，不過唔係最大嗰個，再試下。'); shake(); return; }
-    if (r === 'unsimplified') { setFeedback('info', '數值啱喇！不過仲可以約分，約到最簡先算。'); return; }
-    if (r === 'notleast') { setFeedback('info', nums[0] + ' 係公分母，不過唔係最小嗰個，再試下。'); shake(); return; }
+    if (r === 'invalid') { setFeedback('info', t('分母唔可以係 0，再檢查下。', 'The denominator cannot be 0. Check again.')); shake(); return; }
+    if (r === 'nonstandard') { setFeedback('info', t('數值啱喇！不過分數部分要細過 1，而且要約到最簡。', 'The value is right! But the fraction part must be less than 1 and in lowest terms.')); return; }
+    if (r === 'notgreatest') { setFeedback('info', t(nums[0] + ' 係公因數，不過唔係最大嗰個，再試下。', nums[0] + ' is a common factor, but not the greatest one. Try again.')); shake(); return; }
+    if (r === 'unsimplified') { setFeedback('info', t('數值啱喇！不過仲可以約分，約到最簡先算。', 'The value is right! But it can still be simplified. Reduce it to lowest terms.')); return; }
+    if (r === 'notleast') { setFeedback('info', t(nums[0] + ' 係公分母，不過唔係最小嗰個，再試下。', nums[0] + ' is a common denominator, but not the least one. Try again.')); shake(); return; }
     if (r === 'correct') {
       answered = true; correct++;
-      setFeedback('good', (attempts > 0 ? '今次啱喇！' : PRAISE[Math.floor(Math.random() * PRAISE.length)]));
+      var PR = lang === 'zh' ? PRAISE_ZH : PRAISE_EN;
+      setFeedback('good', (attempts > 0 ? t('今次啱喇！', 'Got it this time!') : PR[Math.floor(Math.random() * PR.length)]));
       updateSlots();
       return;
     }
     attempts++;
     if (attempts === 1) {
-      setFeedback('bad', '唔啱喔，再諗下。想睇提示就㩒「提示」。');
+      setFeedback('bad', t('唔啱喔，再諗下。想睇提示就㩒「提示」。', 'Not quite. Try again. Tap "Hint" if you want help.'));
       shake();
     } else {
       answered = true;
       vals = answerSlots(q);
       hintShown = stepsFor(q).length;
-      setFeedback('bad', '答案係 ' + answerText(q) + '。睇下點做：');
+      setFeedback('bad', t('答案係 ' + answerText(q) + '。睇下點做：', 'The answer is ' + answerText(q) + '. Here is how:'));
       renderHint();
       updateSlots();
     }
@@ -1010,14 +1069,14 @@ function answerSlots(q) {
     if (improved) { progress.stars[lvIdx] = stars; saveProgress(); }
     $('#res-level').textContent = levelTag();
     var rs = $('#res-stars');
-    rs.setAttribute('aria-label', stars + ' 粒星，共 3 粒');
+    rs.setAttribute('aria-label', t(stars + ' 粒星，共 3 粒', stars + ' of 3 stars'));
     rs.innerHTML = starsHTML(stars);
     Array.prototype.forEach.call(rs.children, function (el, i) { el.classList.add('pop'); el.style.animationDelay = (i * 0.15) + 's'; });
-    var title = correct === 10 ? '全部啱！你係分數小英雄！' : correct >= 8 ? '好犀利！差少少就滿分' : correct >= 6 ? '過關喇！' : '再試多次，一定得';
+    var title = correct === 10 ? t('全部啱！你係分數小英雄！', 'Perfect! You are a Fraction Hero!') : correct >= 8 ? t('好犀利！差少少就滿分', 'Excellent! Almost perfect.') : correct >= 6 ? t('過關喇！', 'Level passed!') : t('再試多次，一定得', 'Try again. You can do it!');
     $('#res-title').textContent = title;
-    var detail = '答啱 ' + correct + ' / ' + qs.length + ' 題。';
-    if (stars === 0) detail += '多用「提示」睇下點做，再試一次。';
-    else if (stars < 3) detail += '再練多次可以爭取更多星。';
+    var detail = t('答啱 ' + correct + ' / ' + qs.length + ' 題。', correct + ' / ' + qs.length + ' correct. ');
+    if (stars === 0) detail += t('多用「提示」睇下點做，再試一次。', 'Use "Hint" to see how, then try again.');
+    else if (stars < 3) detail += t('再練多次可以爭取更多星。', 'Practise more to earn extra stars.');
     $('#res-detail').textContent = detail;
     var nextBtn = $('#res-next');
     nextBtn.hidden = !(progress.stars[lvIdx] >= 1 && lvIdx < MAIN - 1);
@@ -1041,7 +1100,7 @@ function answerSlots(q) {
   $('#quit').addEventListener('click', function () {
     if (!quitArmed) {
       quitArmed = true;
-      setFeedback('info', '再㩒一次 ✕ 就會離開今次練習。');
+      setFeedback('info', t('再㩒一次 ✕ 就會離開今次練習。', 'Tap ✕ again to leave this practice.'));
       clearTimeout(quitTimer);
       quitTimer = setTimeout(function () { quitArmed = false; if (!answered) setFeedback('', ''); }, 3000);
       return;
@@ -1052,19 +1111,27 @@ function answerSlots(q) {
   $('#res-next').addEventListener('click', function () { startLevel(lvIdx + 1); });
   $('#res-home').addEventListener('click', function () { renderHome(); show('home'); });
 
+  $('#lang').addEventListener('click', function () {
+    lang = lang === 'zh' ? 'en' : 'zh';
+    setLang(lang);
+    try { localStorage.setItem(LANGKEY, lang); } catch (e) { /* ignore */ }
+    resetArmed = false; clearTimeout(resetTimer);
+    renderHome();
+  });
+
   var resetArmed = false, resetTimer = null;
   $('#reset').addEventListener('click', function () {
     var btn = this;
     if (!resetArmed) {
       resetArmed = true;
-      btn.textContent = '再㩒一次確認清除';
+      btn.textContent = t('再㩒一次確認清除', 'Tap again to confirm');
       clearTimeout(resetTimer);
-      resetTimer = setTimeout(function () { resetArmed = false; btn.textContent = '清除進度'; }, 3500);
+      resetTimer = setTimeout(function () { resetArmed = false; btn.textContent = STATIC.reset[lang === 'zh' ? 0 : 1]; }, 3500);
       return;
     }
     resetArmed = false; clearTimeout(resetTimer);
     progress.stars = [0, 0, 0, 0, 0, 0, 0]; saveProgress();
-    btn.textContent = '清除進度';
+    btn.textContent = STATIC.reset[lang === 'zh' ? 0 : 1];
     renderHome();
   });
 

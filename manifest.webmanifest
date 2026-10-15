@@ -1,8 +1,8 @@
 {
-  "name": "分數小英雄",
-  "short_name": "分數小英雄",
-  "description": "分數加減、通分、約分、帶分數練習",
-  "lang": "zh-HK",
+  "name": "Fraction Hero",
+  "short_name": "Fraction Hero",
+  "description": "Fraction practice: add, subtract, simplify, mixed numbers",
+  "lang": "en",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
